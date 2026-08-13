@@ -90,18 +90,21 @@ def simulasi_agv(waktu, seed_offset, laju_pakai, laju_isi, soc_awal=None):
 
     for i in range(n):
         jam = waktu[i].hour
-        if status:
+        status_saat_ini = status  # catat status SEBELUM diperbarui, agar sinkron dengan perubahan SoC baris ini
+
+        if status_saat_ini:
             soc_now += laju_isi + rng.normal(0, 0.3)
             if soc_now >= 95:
-                status = False
+                status = False   # berhenti charging mulai baris BERIKUTNYA
         else:
             pemakaian = laju_pakai * (1.6 if 8 <= jam <= 17 else 0.4)
             soc_now -= pemakaian + rng.normal(0, 0.2)
             if soc_now <= 20:
-                status = True
+                status = True    # mulai charging mulai baris BERIKUTNYA
+
         soc_now = float(np.clip(soc_now, 5, 100))
         soc[i] = soc_now
-        sedang_charging[i] = status
+        sedang_charging[i] = status_saat_ini  # status yang benar-benar berlaku SAAT perubahan SoC ini terjadi
 
     return soc.round(1), sedang_charging
 
